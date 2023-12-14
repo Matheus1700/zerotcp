@@ -30,9 +30,11 @@ public class TCPClient implements Runnable {
             modifiedSentence = inFromServer.readLine();
 
             if (modifiedSentence != null) {
-                System.out.println(modifiedSentence);
-            } else {
-                System.out.println("Jogador " + modifiedSentence + " venceu");
+                if (modifiedSentence.equals("Empate")) {
+                    System.out.println(modifiedSentence);
+                } else {
+                    System.out.println("Jogador " + modifiedSentence + " venceu");
+                }
             }
 
             clientSocket.close();

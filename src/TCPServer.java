@@ -71,26 +71,10 @@ public class TCPServer {
 
                 // Envia a resposta depois que todos deram input | Aqui vai o código do vencedor
                 int indiceVencedor = determinarIndiceVencedor(userResponses);
-                String msgVencedor = "Parabéns, você venceu!";
-                String msgPerdedor = "Você perdeu. O jogador " + (indiceVencedor + 1) + " venceu";
-                String msgEmpate = "Empate";
-
-                /*
-                for (Socket socket : addressToSocketMap.values()) {
-                    if (indiceVencedor != -1) {
-                        if (socket == addressToSocketMap.get(userAdresses.get(indiceVencedor))) {
-                            enviarMensagemCliente(msgVencedor, socket);
-                        } else {
-                            enviarMensagemCliente(msgPerdedor, socket);
-                        }
-                    } else {
-                        enviarMensagemCliente(msgEmpate, socket);
-                    }
-                }
-                 */
 
                 DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
                 String response = "Jogador " + (indiceVencedor + 1) + "venceu!" + '\n';
+                if (indiceVencedor == -1) { response = "Empate" + '\n'; }
                 outToClient.writeBytes(response);
                 connectionSocket.close();
             } catch (Exception e) {
@@ -118,15 +102,6 @@ public class TCPServer {
             }
 
             return -1; // em caso de empate
-        }
-
-        public void enviarMensagemCliente(String mensagem, Socket socket) {
-            try {
-                DataOutputStream outToClient = new DataOutputStream(socket.getOutputStream());
-                outToClient.writeBytes(mensagem + '\n');
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
 
         // Criei essa função aqui mas acabei nem usando
