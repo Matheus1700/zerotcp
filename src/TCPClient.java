@@ -33,7 +33,7 @@ public class TCPClient implements Runnable {
                 if (modifiedSentence.equals("Empate")) {
                     System.out.println(modifiedSentence);
                 } else {
-                    System.out.println("Jogador " + modifiedSentence + " venceu");
+                    System.out.println("Jogador " + modifiedSentence);
                 }
             }
 
