@@ -1,6 +1,5 @@
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -21,7 +20,7 @@ public class TCPServer {
     private static final CountDownLatch latch = new CountDownLatch(MAX_CLIENTS);
 
     private static final List<String> userResponses = new ArrayList<>();
-    private static final List<InetAddress> userAddresses = new ArrayList<>();
+    private static final List<InetAddress> userAdresses = new ArrayList<java.net.InetAddress>();
     private static final Map<InetAddress, Socket> addressToSocketMap = new HashMap<>();
 
     public static void main(String argv[]) throws Exception {
@@ -29,38 +28,14 @@ public class TCPServer {
         System.out.println("TCP server rodando!");
 
         while (true) {
-            for (int jogadas = 0; jogadas < 3; jogadas++) {
-                userResponses.clear();
-                userAddresses.clear();
-                addressToSocketMap.clear();
+            Socket connectionSocket = welcomeSocket.accept();
 
-                for (int i = 0; i < MAX_CLIENTS; i++) {
-                    Socket connectionSocket = welcomeSocket.accept();
-
-                    if (executorService.getActiveCount() < MAX_CLIENTS) {
-                        System.out.println("Cliente conectado ao TCP server");
-                        executorService.execute(new ClientHandler(connectionSocket, latch));
-                    } else {
-                        System.out.println("Limite máximo de clientes atingido. Rejeitando a conexão.");
-                        connectionSocket.close();
-                    }
-                }
-
-                // Esperar a entrada de todos os clientes
-                latch.await();
-
-                // Resto do código do servidor para determinar o vencedor
-                int indiceVencedor = determinarIndiceVencedor(userResponses);
-
-                // Enviar a resposta depois que todos deram input
-                for (Socket socket : addressToSocketMap.values()) {
-                    DataOutputStream outToClient = new DataOutputStream(socket.getOutputStream());
-                    String response = "Jogador " + (indiceVencedor + 1) + " venceu!" + '\n';
-                    if (indiceVencedor == -1) {
-                        response = "Empate" + '\n';
-                    }
-                    outToClient.writeBytes(response);
-                }
+            if (executorService.getActiveCount() < MAX_CLIENTS) {
+                System.out.println("Cliente conectado ao TCP server");
+                executorService.execute(new ClientHandler(connectionSocket, latch));
+            } else {
+                System.out.println("Limite máximo de clientes atingido. Rejeitando a conexão.");
+                connectionSocket.close();
             }
         }
     }
@@ -85,38 +60,56 @@ public class TCPServer {
 
                 // Salva a resposta e o endereço IP de cada usuário
                 userResponses.add(clientSentence);
-                userAddresses.add(connectionSocket.getInetAddress());
+                userAdresses.add(connectionSocket.getInetAddress());
                 addressToSocketMap.put(connectionSocket.getInetAddress(), connectionSocket);
 
                 // Contagem que + um cliente forneceu uma entrada
                 latch.countDown();
                 // Aguarda a entrada de todos os clientes
                 latch.await();
+
+
+                // Envia a resposta depois que todos deram input | Aqui vai o código do vencedor
+                int indiceVencedor = determinarIndiceVencedor(userResponses);
+
+                DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+                String response = "Jogador " + (indiceVencedor + 1) + "venceu!" + '\n';
+                if (indiceVencedor == -1) { response = "Empate" + '\n'; }
+                outToClient.writeBytes(response);
+                connectionSocket.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }
 
-    public static int determinarIndiceVencedor(List<String> userResponses) {
-        for (int i = 0; i < userResponses.size(); i++) {
-            String jogadorAtual = userResponses.get(i);
-            boolean jogadorEliminado = false;
+        public int determinarIndiceVencedor(List<String> userResponses) {
+            for (int i = 0; i < userResponses.size(); i++) {
+                String jogadorAtual = userResponses.get(i);
+                boolean jogadorEliminado = false;
 
-            for (int j = 0; j < userResponses.size(); j++) {
-                if (i != j && jogadorAtual.equals(userResponses.get(j))) {
-                    jogadorEliminado = false;
-                    break;
-                } else {
-                    jogadorEliminado = true;
+                for (int j = 0; j < userResponses.size(); j++) {
+                    if (i != j && jogadorAtual.equals(userResponses.get(j))) {
+                        jogadorEliminado = false;
+                        break;
+                    } else {
+                        jogadorEliminado = true;
+                    }
+                }
+
+                if (jogadorEliminado) {
+                    return i;
                 }
             }
 
-            if (jogadorEliminado) {
-                return i;
-            }
+            return -1; // em caso de empate
         }
 
-        return -1; // em caso de empate
+        // Criei essa função aqui mas acabei nem usando
+        public InetAddress obterEnderecoVencedor(List<InetAddress> userAddresses, int indiceVencedor) {
+            if (indiceVencedor >= 0 && indiceVencedor < userAddresses.size()) {
+                return userAddresses.get(indiceVencedor);
+            }
+            return null;
+        }
     }
 }
