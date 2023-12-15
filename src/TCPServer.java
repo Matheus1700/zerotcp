@@ -35,7 +35,6 @@ public class TCPServer {
                 executorService.execute(new ClientHandler(connectionSocket, latch));
             } else {
                 System.out.println("Limite máximo de clientes atingido. Rejeitando a conexão.");
-                connectionSocket.close();
             }
         }
     }
@@ -73,10 +72,9 @@ public class TCPServer {
                 int indiceVencedor = determinarIndiceVencedor(userResponses);
 
                 DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-                String response = "Jogador " + (indiceVencedor + 1) + "venceu!" + '\n';
+                String response = "Jogador " + (indiceVencedor + 1) + " venceu!" + '\n';
                 if (indiceVencedor == -1) { response = "Empate" + '\n'; }
                 outToClient.writeBytes(response);
-                connectionSocket.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -42,7 +42,7 @@ public class TCPClient implements Runnable {
         Socket clientSocket = new Socket("localhost", 6789);
         // por enquanto ainda ta a logica de deixar em letra maiuscula, ent ignorem o 0
         // ou 1 kkkkkk
-        System.out.println("Digite zero ou um:");
+        System.out.println("Digite zero ou um: ");
 
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
