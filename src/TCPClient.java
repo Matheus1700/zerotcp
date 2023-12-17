@@ -30,11 +30,6 @@ public class TCPClient implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -42,7 +37,6 @@ public class TCPClient implements Runnable {
         Socket clientSocket = new Socket("localhost", 6789);
         // por enquanto ainda ta a logica de deixar em letra maiuscula, ent ignorem o 0
         // ou 1 kkkkkk
-        System.out.println("Digite zero ou um: ");
 
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
@@ -55,24 +49,17 @@ public class TCPClient implements Runnable {
 
         try {
             while (true) {
+                System.out.println("Digite zero ou um: ");
                 result = inFromServer.readLine();
 
                 if (result != null) {
-                    if (result.equals("Empate")) {
-                        System.out.println(result);
-                    } else {
-                        System.out.println("Jogador " + result + " ");
-                    }
+                    System.out.println(result);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
         }
 
     }

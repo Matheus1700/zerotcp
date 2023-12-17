@@ -8,16 +8,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class TCPServer {
 
     private static final int MAX_CLIENTS = 3;
-    private static final ThreadPoolExecutor executorService =
-            (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_CLIENTS);
-    private static final CountDownLatch latch = new CountDownLatch(MAX_CLIENTS);
+    private static final ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors
+            .newFixedThreadPool(MAX_CLIENTS);
+            private static final CyclicBarrier barrier = new CyclicBarrier(MAX_CLIENTS);
 
     private static final List<String> userResponses = new ArrayList<>();
     private static final List<InetAddress> userAdresses = new ArrayList<java.net.InetAddress>();
@@ -32,7 +32,7 @@ public class TCPServer {
 
             if (executorService.getActiveCount() < MAX_CLIENTS) {
                 System.out.println("Cliente conectado ao TCP server");
-                executorService.execute(new ClientHandler(connectionSocket, latch));
+                executorService.execute(new ClientHandler(connectionSocket, barrier));
             } else {
                 System.out.println("Limite máximo de clientes atingido. Rejeitando a conexão.");
             }
@@ -41,43 +41,52 @@ public class TCPServer {
 
     static class ClientHandler implements Runnable {
         private Socket connectionSocket;
-        private CountDownLatch latch;
+        private CyclicBarrier barrier;
 
-        public ClientHandler(Socket connectionSocket, CountDownLatch latch) {
+        public ClientHandler(Socket connectionSocket, CyclicBarrier barrier) {
             this.connectionSocket = connectionSocket;
-            this.latch = latch;
+            this.barrier = barrier;
         }
 
         @Override
         public void run() {
-            try {
-                String clientSentence;
-                BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+            while (true) {
+                try {
 
-                clientSentence = inFromClient.readLine();
-                System.out.println("Recebido do cliente: " + clientSentence);
+                    String clientSentence;
+                    BufferedReader inFromClient = new BufferedReader(
+                            new InputStreamReader(connectionSocket.getInputStream()));
 
-                // Salva a resposta e o endereço IP de cada usuário
-                userResponses.add(clientSentence);
-                userAdresses.add(connectionSocket.getInetAddress());
-                addressToSocketMap.put(connectionSocket.getInetAddress(), connectionSocket);
+                    clientSentence = inFromClient.readLine();
+                    System.out.println("Recebido do cliente: " + clientSentence);
 
-                // Contagem que + um cliente forneceu uma entrada
-                latch.countDown();
-                // Aguarda a entrada de todos os clientes
-                latch.await();
+                    // Salva a resposta e o endereço IP de cada usuário
+                    userResponses.add(clientSentence);
+                    userAdresses.add(connectionSocket.getInetAddress());
+                    addressToSocketMap.put(connectionSocket.getInetAddress(), connectionSocket);
 
+                    // Contagem que + um cliente forneceu uma entrada
+                    //?
+                    // Aguarda a entrada de todos os clientes
+                    barrier.await();
 
-                // Envia a resposta depois que todos deram input | Aqui vai o código do vencedor
-                int indiceVencedor = determinarIndiceVencedor(userResponses);
+                    // Envia a resposta depois que todos deram input | Aqui vai o código do vencedor
+                    int indiceVencedor = determinarIndiceVencedor(userResponses);
 
-                DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-                String response = "Jogador " + (indiceVencedor + 1) + " venceu!" + '\n';
-                if (indiceVencedor == -1) { response = "Empate" + '\n'; }
-                outToClient.writeBytes(response);
-            } catch (Exception e) {
-                e.printStackTrace();
+                    DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+                    String response = "Jogador " + (indiceVencedor + 1) + " venceu!" + '\n';
+                    if (indiceVencedor == -1) {
+                        response = "Empate" + '\n';
+                    }
+                    outToClient.writeBytes(response);
+                    userAdresses.clear();
+                    addressToSocketMap.clear();
+                    userResponses.clear();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+
         }
 
         public int determinarIndiceVencedor(List<String> userResponses) {
