@@ -23,7 +23,10 @@ public class TCPClient implements Runnable {
                 String clientInput;
 
                 clientInput = inFromConsole.readLine();
-
+                if (!clientInput.equals("0") & !clientInput.equals("1")){
+                    System.out.println("Opção inválida. Escolha 0 ou 1.");
+                    continue;
+                }
                 outToServer.writeBytes(clientInput + '\n');
 
             }
