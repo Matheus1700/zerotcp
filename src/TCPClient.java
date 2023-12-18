@@ -1,6 +1,5 @@
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
@@ -20,6 +19,9 @@ public class TCPClient implements Runnable {
             DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 
             while (true) {
+                if (clientSocket.isClosed()) {
+                    break;
+                }
                 String clientInput;
 
                 clientInput = inFromConsole.readLine();
@@ -31,7 +33,6 @@ public class TCPClient implements Runnable {
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
         } finally {
         }
     }
@@ -57,12 +58,16 @@ public class TCPClient implements Runnable {
 
                 if (result != null) {
                     System.out.println(result);
+                } else {
+                    System.out.println("Conexão com o servidor encerrada.");
+                    clientSocket.close();
+                    
+                    break;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-
         }
 
     }
